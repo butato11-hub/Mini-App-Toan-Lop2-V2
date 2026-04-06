@@ -1,0 +1,87 @@
+{
+  "entities": {
+    "Question": {
+      "title": "Question",
+      "description": "A math question for a specific grade and subject.",
+      "type": "object",
+      "properties": {
+        "grade": {
+          "type": "string",
+          "enum": ["2", "6"],
+          "description": "The grade level of the question."
+        },
+        "subject": {
+          "type": "string",
+          "enum": ["math", "vietnamese", "english"],
+          "description": "The subject of the question."
+        },
+        "type": {
+          "type": "string",
+          "description": "The type of question (e.g., 'calc', 'fraction_calc')."
+        },
+        "q": {
+          "type": "string",
+          "description": "The question text."
+        },
+        "ans": {
+          "type": "string",
+          "description": "The correct answer."
+        },
+        "opts": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Optional multiple choice options."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "When the question was created."
+        }
+      },
+      "required": ["grade", "subject", "q", "ans"]
+    },
+    "Score": {
+      "title": "Score",
+      "description": "A user's game score.",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "description": "The ID of the user who achieved the score."
+        },
+        "playerName": {
+          "type": "string",
+          "description": "The name of the player."
+        },
+        "grade": {
+          "type": "string",
+          "description": "The grade level."
+        },
+        "subject": {
+          "type": "string",
+          "description": "The subject."
+        },
+        "score": {
+          "type": "integer",
+          "description": "The score achieved."
+        },
+        "timestamp": {
+          "type": "string",
+          "format": "date-time",
+          "description": "When the score was recorded."
+        }
+      },
+      "required": ["userId", "playerName", "grade", "subject", "score", "timestamp"]
+    }
+  },
+  "firestore": {
+    "questions": {
+      "schema": "Question",
+      "description": "A collection of generated or predefined questions."
+    },
+    "scores": {
+      "schema": "Score",
+      "description": "A collection of user scores."
+    }
+  }
+}
