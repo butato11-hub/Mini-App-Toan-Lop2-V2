@@ -96,7 +96,7 @@ export default function App() {
     let newQ: Question;
     
     if (subject === 'math') {
-      const mathTypes = ['calc', 'compare', 'unit', 'word', 'estimate', 'digits', 'unit_choice'];
+      const mathTypes = ['calc', 'compare', 'unit', 'word', 'estimate', 'digits', 'unit_choice', 'multi_step'];
       const mathType = mathTypes[Math.floor(Math.random() * mathTypes.length)];
       
       if (mathType === 'calc') {
@@ -105,7 +105,7 @@ export default function App() {
         let n1: number = 0, n2: number = 0, ans: number = 0;
 
         if (operator === '+' || operator === '-') {
-          const is3Digit = Math.random() < 0.6; // Increased probability for 3-digit
+          const is3Digit = Math.random() < 0.7; // Even more 3-digit questions
           const max = is3Digit ? 999 : 100;
           if (operator === '+') {
             n1 = Math.floor(Math.random() * (max - 10)) + 1;
@@ -117,7 +117,7 @@ export default function App() {
             ans = n1 - n2;
           }
         } else {
-          const table = [2, 3, 4, 5, 6, 7, 8, 9][Math.floor(Math.random() * 8)]; // Expanded tables
+          const table = [2, 3, 4, 5, 6, 7, 8, 9][Math.floor(Math.random() * 8)];
           const multiplier = Math.floor(Math.random() * 10) + 1;
           if (operator === 'x') {
             n1 = table; n2 = multiplier; ans = n1 * n2;
@@ -126,6 +126,29 @@ export default function App() {
           }
         }
         newQ = { type: 'math', num1: n1, num2: n2, operator, answer: ans };
+      } else if (mathType === 'multi_step') {
+        const type = Math.floor(Math.random() * 3);
+        let q = "", ans = 0;
+        if (type === 0) { // a * b + c
+          const a = [2,3,4,5,6,7,8,9][Math.floor(Math.random()*8)];
+          const b = Math.floor(Math.random()*9)+1;
+          const c = Math.floor(Math.random()*500)+100;
+          ans = a * b + c;
+          q = `${a} x ${b} + ${c} = ?`;
+        } else if (type === 1) { // a - b + c
+          const a = Math.floor(Math.random()*500)+100;
+          const b = Math.floor(Math.random()*a)+1;
+          const c = Math.floor(Math.random()*500)+100;
+          ans = a - b + c;
+          q = `${a} - ${b} + ${c} = ?`;
+        } else { // a + b - c
+          const a = Math.floor(Math.random()*500)+100;
+          const b = Math.floor(Math.random()*400)+100;
+          const c = Math.floor(Math.random()*(a+b-10))+1;
+          ans = a + b - c;
+          q = `${a} + ${b} - ${c} = ?`;
+        }
+        newQ = { type: 'text', q, ans };
       } else if (mathType === 'digits') {
         // Logic: How many 3-digit numbers can be formed
         const digits = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9].sort(() => Math.random() - 0.5).slice(0, 4);
@@ -202,11 +225,14 @@ export default function App() {
         const scenarios = [
           { template: "An có {n1}kg gạo, Bình có {n2}kg gạo. Cả hai có bao nhiêu kg?", op: '+' },
           { template: "Mẹ mua {n1}l dầu, dùng hết {n2}l. Còn lại bao nhiêu lít?", op: '-' },
-          { template: "Mỗi túi có {n1} quả cam. 5 túi có bao nhiêu quả?", op: 'x', n2: 5 }
+          { template: "Mỗi túi có {n1} quả cam. 5 túi có bao nhiêu quả?", op: 'x', n2: 5 },
+          { template: "Một nhà máy sáng nay sản xuất được {n1} chiếc bánh mì tròn và {n2} chiếc bánh mì dẹt. Hỏi sáng nay nhà máy sản xuất được tất cả bao nhiêu chiếc bánh mì?", op: '+' },
+          { template: "Một cửa hàng bán đồ thể thao đã nhập về {n1} quả bóng đá, số quả bóng rổ cửa hàng nhập về nhiều hơn số quả bóng đá {n2} quả. Hỏi cửa hàng đã nhập về bao nhiêu quả bóng rổ?", op: '+' }
         ];
         const sc = scenarios[Math.floor(Math.random() * scenarios.length)];
-        const n1 = Math.floor(Math.random() * 20) + 5;
-        const n2 = sc.n2 || Math.floor(Math.random() * n1) + 1;
+        const isLarge = Math.random() < 0.5;
+        const n1 = isLarge ? Math.floor(Math.random() * 500) + 100 : Math.floor(Math.random() * 50) + 10;
+        const n2 = sc.n2 || (isLarge ? Math.floor(Math.random() * 400) + 50 : Math.floor(Math.random() * n1) + 1);
         const ans = sc.op === '+' ? n1 + n2 : (sc.op === '-' ? n1 - n2 : n1 * n2);
         newQ = { 
           type: 'text', 
