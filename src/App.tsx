@@ -211,6 +211,7 @@ export default function App() {
   const [quizIndex, setQuizIndex] = useState(0);
   const [user, setUser] = useState<FirebaseUser | null>(null);
   const [isAuthReady, setIsAuthReady] = useState(false);
+  const [loginError, setLoginError] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
   // Firebase Error Handling
@@ -253,10 +254,18 @@ export default function App() {
 
   const handleLogin = async () => {
     const provider = new GoogleAuthProvider();
+    setLoginError(null);
     try {
       await signInWithPopup(auth, provider);
-    } catch (err) {
+    } catch (err: any) {
       console.error("Login error:", err);
+      if (err.code === 'auth/unauthorized-domain') {
+        setLoginError("Tên miền này chưa được cấp phép trong Firebase Console. Vui lòng thêm domain Vercel của bạn vào danh sách 'Authorized domains' trong Firebase Auth.");
+      } else if (err.code === 'auth/popup-blocked') {
+        setLoginError("Trình duyệt đã chặn cửa sổ đăng nhập. Vui lòng cho phép bật popup.");
+      } else {
+        setLoginError(`Lỗi đăng nhập: ${err.message}`);
+      }
     }
   };
 
@@ -1062,6 +1071,13 @@ export default function App() {
                 </button>
               ))}
             </div>
+
+            {loginError && (
+              <div className="mb-4 p-4 bg-red-50 border-2 border-red-200 rounded-2xl text-red-600 text-sm font-medium">
+                {loginError}
+              </div>
+            )}
+
             <button
               onClick={() => {
                 if (!user) {
