@@ -12,7 +12,13 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { auth, db } from './firebase';
-import { signInWithPopup, GoogleAuthProvider, onAuthStateChanged, User as FirebaseUser } from 'firebase/auth';
+import { 
+  signInWithPopup, 
+  signInWithRedirect,
+  GoogleAuthProvider, 
+  onAuthStateChanged, 
+  User as FirebaseUser 
+} from 'firebase/auth';
 import { collection, addDoc, serverTimestamp, query, where, getDocs, limit, getDocFromServer, doc } from 'firebase/firestore';
 
 type Operator = '+' | '-' | 'x' | ':' | '>' | '<' | '=';
@@ -252,19 +258,38 @@ export default function App() {
     // We don't throw here to avoid crashing the UI, but we log it for debugging
   };
 
-  const handleLogin = async () => {
+  const handleLogin = async (useRedirect = false) => {
     const provider = new GoogleAuthProvider();
     setLoginError(null);
+    console.log(`Starting login process (${useRedirect ? 'Redirect' : 'Popup'})...`);
+    
     try {
-      await signInWithPopup(auth, provider);
-    } catch (err: any) {
-      console.error("Login error:", err);
-      if (err.code === 'auth/unauthorized-domain') {
-        setLoginError("Tên miền này chưa được cấp phép trong Firebase Console. Vui lòng thêm domain Vercel của bạn vào danh sách 'Authorized domains' trong Firebase Auth.");
-      } else if (err.code === 'auth/popup-blocked') {
-        setLoginError("Trình duyệt đã chặn cửa sổ đăng nhập. Vui lòng cho phép bật popup.");
+      provider.setCustomParameters({ prompt: 'select_account' });
+      
+      if (useRedirect) {
+        await signInWithRedirect(auth, provider);
       } else {
-        setLoginError(`Lỗi đăng nhập: ${err.message}`);
+        const result = await signInWithPopup(auth, provider);
+        console.log("Login successful:", result.user.email);
+      }
+    } catch (err: any) {
+      console.error("Login error details:", err);
+      const errorCode = err.code;
+      const errorMessage = err.message;
+      const currentHost = window.location.hostname;
+
+      if (errorCode === 'auth/unauthorized-domain') {
+        setLoginError(`LỖI: Tên miền '${currentHost}' chưa được cấp phép. 
+          Cách sửa: 
+          1. Vào Firebase Console > Authentication > Settings.
+          2. Tìm mục 'Authorized domains'.
+          3. Nhấn 'Add domain' và dán '${currentHost}' vào.`);
+      } else if (errorCode === 'auth/popup-closed-by-user') {
+        setLoginError("Cửa sổ đăng nhập đã bị đóng. Bạn có thể thử lại hoặc dùng nút 'Đăng nhập bằng Chuyển hướng' bên dưới.");
+      } else if (errorCode === 'auth/popup-blocked') {
+        setLoginError("Trình duyệt đã chặn Popup. Hãy cho phép Popup hoặc dùng 'Đăng nhập bằng Chuyển hướng'.");
+      } else {
+        setLoginError(`Lỗi (${errorCode}): ${errorMessage}`);
       }
     }
   };
@@ -1073,8 +1098,16 @@ export default function App() {
             </div>
 
             {loginError && (
-              <div className="mb-4 p-4 bg-red-50 border-2 border-red-200 rounded-2xl text-red-600 text-sm font-medium">
-                {loginError}
+              <div className="mb-4">
+                <div className="p-4 bg-red-50 border-2 border-red-200 rounded-2xl text-red-600 text-sm font-medium mb-2">
+                  {loginError}
+                </div>
+                <button 
+                  onClick={() => handleLogin(true)}
+                  className="w-full py-2 text-sm font-bold text-blue-600 hover:underline"
+                >
+                  Thử đăng nhập bằng cách Chuyển hướng trang
+                </button>
               </div>
             )}
 
