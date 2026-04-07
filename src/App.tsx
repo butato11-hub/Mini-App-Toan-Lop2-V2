@@ -12,7 +12,7 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { auth, db } from './firebase';
-import { signInAnonymously, onAuthStateChanged, User as FirebaseUser } from 'firebase/auth';
+import { signInWithPopup, GoogleAuthProvider, onAuthStateChanged, User as FirebaseUser } from 'firebase/auth';
 import { collection, addDoc, serverTimestamp, query, where, getDocs, limit, getDocFromServer, doc } from 'firebase/firestore';
 
 type Operator = '+' | '-' | 'x' | ':' | '>' | '<' | '=';
@@ -75,6 +75,84 @@ const VIETNAMESE_DATA = [
   { q: "Từ nào viết đúng chính tả?", text: "", ans: "quả cam", opts: ["quả cam", "quả kam"] },
   { q: "Điền vào chỗ trống: 'l' hay 'n'?", text: "quả ...ê", ans: "l", opts: ["l", "n"] },
   { q: "Điền vào chỗ trống: 'i' hay 'iê'?", text: "con k...n", ans: "iê", opts: ["i", "iê"] },
+  { q: "Điền vào chỗ trống: 's' hay 'x'?", text: "...ông núi", ans: "s", opts: ["s", "x"] },
+  { q: "Từ nào chỉ hoạt động?", text: "", ans: "Quét nhà", opts: ["Quét nhà", "Cái chổi", "Sạch sẽ"] },
+  { q: "Từ nào chỉ đặc điểm?", text: "", ans: "Thông minh", opts: ["Học bài", "Thông minh", "Bút chì"] },
+  { q: "Câu 'Mẹ em là giáo viên' thuộc kiểu câu nào?", text: "", ans: "Ai là gì?", opts: ["Ai làm gì?", "Ai thế nào?", "Ai là gì?"] },
+  { q: "Điền vào chỗ trống: 'i' hay 'y'?", text: "v...ết chữ", ans: "i", opts: ["i", "y"] },
+  { q: "Từ trái nghĩa với 'Cao' là gì?", text: "", ans: "Thấp", opts: ["To", "Thấp", "Dài"] },
+  { q: "Điền vào chỗ trống: 'd' hay 'gi'?", text: "...ày dép", ans: "gi", opts: ["d", "gi"] },
+  { q: "Từ nào viết đúng chính tả?", text: "", ans: "trường học", opts: ["trường học", "chường học"] },
+  { q: "Con gì gáy 'O ó o'?", text: "", ans: "Con gà trống", opts: ["Con vịt", "Con gà trống", "Con mèo"] },
+  { q: "Điền vào chỗ trống: 'ua' hay 'uô'?", text: "m...a sắm", ans: "ua", opts: ["ua", "uô"] },
+  { q: "Điền vào chỗ trống: 'ua' hay 'uô'?", text: "b...ốn bán", ans: "uô", opts: ["ua", "uô"] },
+  { q: "Từ nào chỉ người trong gia đình?", text: "", ans: "Ông nội", opts: ["Ông nội", "Bác sĩ", "Bạn bè"] },
+  { q: "Dấu câu nào dùng để ngăn cách các ý trong câu?", text: "", ans: "Dấu phẩy", opts: ["Dấu chấm", "Dấu phẩy", "Dấu hỏi"] },
+  { q: "Từ nào đồng nghĩa với 'Đẹp'?", text: "", ans: "Xinh", opts: ["Xinh", "Xấu", "Bẩn"] },
+  { q: "Con gì có vòi dài?", text: "", ans: "Con voi", opts: ["Con voi", "Con kiến", "Con hươu"] },
+  { q: "Điền vào chỗ trống: 'ai' hay 'ay'?", text: "bàn t... ", ans: "ay", opts: ["ai", "ay"] },
+  { q: "Tìm từ trái nghĩa với 'Siêng năng'?", text: "", ans: "Lười biếng", opts: ["Lười biếng", "Chăm chỉ", "Ngoan ngoãn"] },
+  { q: "Điền vào chỗ trống: 'l' hay 'n'?", text: "...o lắng", ans: "l", opts: ["l", "n"] },
+  { q: "Từ nào chỉ tình cảm gia đình?", text: "", ans: "Yêu thương", opts: ["Yêu thương", "Chạy nhảy", "Cái bàn"] },
+  { q: "Điền vào chỗ trống: 'c' hay 'k'?", text: "thước ...ẻ", ans: "k", opts: ["c", "k"] },
+  { q: "Từ nào là từ chỉ con vật?", text: "", ans: "Con sóc", opts: ["Con sóc", "Cây bàng", "Bông hoa"] },
+  { q: "Từ nào chỉ môn học?", text: "", ans: "Toán học", opts: ["Toán học", "Cái bút", "Chạy bộ"] },
+  { q: "Điền vào chỗ trống: 'an' hay 'ang'?", text: "con s... ", ans: "ang", opts: ["an", "ang"] },
+  { q: "Từ nào viết đúng chính tả?", text: "", ans: "con ghẹ", opts: ["con ghẹ", "con gẹ"] },
+  { q: "Điền vào chỗ trống: 'ng' hay 'ngh'?", text: "suy ...ĩ", ans: "ngh", opts: ["ng", "ngh"] },
+  { q: "Từ nào chỉ đồ dùng học tập?", text: "", ans: "Thước kẻ", opts: ["Thước kẻ", "Cái ghế", "Cái bát"] },
+  { q: "Trong câu 'Em đang học bài', từ nào là động từ?", text: "", ans: "học bài", opts: ["Em", "đang", "học bài"] },
+  { q: "Trong câu 'Bông hoa rất đẹp', từ nào là tính từ?", text: "", ans: "đẹp", opts: ["Bông hoa", "rất", "đẹp"] },
+  { q: "Câu 'Bố em là bác sĩ' thuộc kiểu câu nào?", text: "", ans: "Ai là gì?", opts: ["Ai là gì?", "Ai làm gì?", "Ai thế nào?"] },
+  { q: "Câu 'Chú chim đang hót líu lo' thuộc kiểu câu nào?", text: "", ans: "Ai làm gì?", opts: ["Ai là gì?", "Ai làm gì?", "Ai thế nào?"] },
+  { q: "Câu 'Bầu trời hôm nay rất xanh' thuộc kiểu câu nào?", text: "Ai thế nào?", ans: "Ai thế nào?", opts: ["Ai là gì?", "Ai làm gì?", "Ai thế nào?"] },
+  { q: "Tìm danh từ trong câu: 'Con mèo đang ngủ.'", text: "", ans: "Con mèo", opts: ["Con mèo", "đang", "ngủ"] },
+  { q: "Tìm động từ trong câu: 'Bé chạy tung tăng.'", text: "", ans: "chạy", opts: ["Bé", "chạy", "tung tăng"] },
+  { q: "Tìm tính từ trong câu: 'Ngôi nhà rất cao.'", text: "", ans: "cao", opts: ["Ngôi nhà", "rất", "cao"] },
+  { q: "Từ nào là danh từ chỉ người?", text: "", ans: "Kỹ sư", opts: ["Kỹ sư", "Chạy bộ", "Xanh ngắt"] },
+  { q: "Từ nào là danh từ chỉ vật?", text: "", ans: "Cái bàn", opts: ["Cái bàn", "Thông minh", "Hát ca"] },
+  { q: "Từ nào là danh từ chỉ con vật?", text: "", ans: "Con hổ", opts: ["Con hổ", "Cái cây", "Vui vẻ"] },
+  { q: "Từ nào là danh từ chỉ cây cối?", text: "", ans: "Cây bàng", opts: ["Cây bàng", "Con cá", "Đỏ rực"] },
+  { q: "Từ nào là động từ chỉ hoạt động di chuyển?", text: "", ans: "Đi bộ", opts: ["Đi bộ", "Cái ghế", "Hiền lành"] },
+  { q: "Từ nào là tính từ chỉ màu sắc?", text: "", ans: "Vàng tươi", opts: ["Vàng tươi", "Nhảy múa", "Cái cặp"] },
+  { q: "Từ nào là tính từ chỉ tính cách?", text: "", ans: "Ngoan ngoãn", opts: ["Ngoan ngoãn", "Cái bút", "Đọc sách"] },
+  { q: "Chủ ngữ trong câu 'Mẹ em nấu cơm rất ngon' là gì?", text: "", ans: "Mẹ em", opts: ["Mẹ em", "nấu cơm", "rất ngon"] },
+  { q: "Vị ngữ trong câu 'Đàn chim bay về phương nam' là gì?", text: "", ans: "bay về phương nam", opts: ["Đàn chim", "bay về phương nam", "bay"] },
+  { q: "Từ nào là từ chỉ sự vật?", text: "", ans: "Quyển vở", opts: ["Quyển vở", "Chăm chỉ", "Quét dọn"] },
+  { q: "Từ nào là từ chỉ hoạt động?", text: "", ans: "Tưới cây", opts: ["Tưới cây", "Bông hoa", "Thơm ngát"] },
+  { q: "Từ nào là từ chỉ đặc điểm?", text: "", ans: "Mềm mại", opts: ["Mềm mại", "Con thỏ", "Ăn cỏ"] },
+  { q: "Điền từ thích hợp: 'Em ... bài tập về nhà.'", text: "", ans: "làm", opts: ["làm", "ăn", "ngủ"] },
+  { q: "Điền từ thích hợp: 'Con voi có cái vòi ...'", text: "", ans: "dài", opts: ["dài", "ngắn", "nhỏ"] },
+  { q: "Điền từ thích hợp: 'Bầu trời đêm có nhiều ... lấp lánh.'", text: "", ans: "ngôi sao", opts: ["ngôi sao", "đám mây", "mặt trời"] },
+  { q: "Câu nào có dấu phẩy đặt đúng vị trí?", text: "", ans: "Em thích ăn táo, cam và quýt.", opts: ["Em thích ăn táo, cam và quýt.", "Em thích ăn táo cam, và quýt.", "Em thích ăn táo cam và, quýt."] },
+  { q: "Từ nào đồng nghĩa với 'Chăm chỉ'?", text: "", ans: "Cần cù", opts: ["Cần cù", "Lười biếng", "Nhanh nhẹn"] },
+  { q: "Từ nào trái nghĩa với 'Đoàn kết'?", text: "", ans: "Chia rẽ", opts: ["Chia rẽ", "Gắn bó", "Thương yêu"] },
+  { q: "Từ nào là từ ghép?", text: "", ans: "Học sinh", opts: ["Học sinh", "Xanh xanh", "Nho nhỏ"] },
+  { q: "Từ nào là từ láy?", text: "", ans: "Long lanh", opts: ["Long lanh", "Bàn ghế", "Sách vở"] },
+  { q: "Bộ phận nào trả lời cho câu hỏi 'Ai?' trong câu 'Bác bảo vệ đang đánh trống'?", text: "", ans: "Bác bảo vệ", opts: ["Bác bảo vệ", "đang đánh trống", "đánh trống"] },
+  { q: "Bộ phận nào trả lời cho câu hỏi 'Làm gì?' trong câu 'Đàn gà đang ăn thóc'?", text: "", ans: "đang ăn thóc", opts: ["Đàn gà", "đang ăn thóc", "ăn thóc"] },
+  { q: "Bộ phận nào trả lời cho câu hỏi 'Thế nào?' trong câu 'Dòng sông xanh biếc'?", text: "", ans: "xanh biếc", opts: ["Dòng sông", "xanh biếc", "xanh"] },
+  { q: "Từ nào chỉ nghề nghiệp?", text: "", ans: "Công nhân", opts: ["Công nhân", "Chạy nhảy", "To lớn"] },
+  { q: "Từ nào chỉ thời gian?", text: "", ans: "Buổi sáng", opts: ["Buổi sáng", "Cái đồng hồ", "Chậm chạp"] },
+  { q: "Từ nào chỉ địa điểm?", text: "", ans: "Công viên", opts: ["Công viên", "Vui chơi", "Đông đúc"] },
+  { q: "Dấu câu nào dùng để liệt kê?", text: "", ans: "Dấu phẩy", opts: ["Dấu phẩy", "Dấu chấm", "Dấu chấm hỏi"] },
+  { q: "Câu 'Ôi, bông hoa đẹp quá!' là kiểu câu gì?", text: "", ans: "Câu cảm", opts: ["Câu cảm", "Câu kể", "Câu hỏi"] },
+  { q: "Câu 'Bạn tên là gì?' là kiểu câu gì?", text: "", ans: "Câu hỏi", opts: ["Câu hỏi", "Câu kể", "Câu khiến"] },
+  { q: "Câu 'Hãy đóng cửa lại!' là kiểu câu gì?", text: "", ans: "Câu khiến", opts: ["Câu khiến", "Câu kể", "Câu cảm"] },
+  { q: "Từ nào viết đúng chính tả?", text: "", ans: "trung thực", opts: ["trung thực", "chung thực"] },
+  { q: "Từ nào viết đúng chính tả?", text: "", ans: "giúp đỡ", opts: ["giúp đỡ", "dúp đỡ"] },
+  { q: "Từ nào viết đúng chính tả?", text: "", ans: "rực rỡ", opts: ["rực rỡ", "dực dỡ"] },
+  { q: "Từ nào chỉ hoạt động của con vật?", text: "", ans: "Bay lượn", opts: ["Bay lượn", "Cái cánh", "Xinh xắn"] },
+  { q: "Từ nào chỉ bộ phận cơ thể người?", text: "", ans: "Đôi mắt", opts: ["Đôi mắt", "Nhìn ngắm", "Long lanh"] },
+  { q: "Từ nào chỉ thời tiết?", text: "", ans: "Nắng ráo", opts: ["Nắng ráo", "Cái ô", "Đi chơi"] },
+  { q: "Từ nào chỉ cảm xúc?", text: "", ans: "Hạnh phúc", opts: ["Hạnh phúc", "Cười nói", "Món quà"] },
+  { q: "Tìm từ chỉ sự vật trong câu: 'Mùa xuân đã về.'", text: "", ans: "Mùa xuân", opts: ["Mùa xuân", "đã", "về"] },
+  { q: "Tìm từ chỉ hoạt động trong câu: 'Gió thổi mạnh.'", text: "", ans: "thổi", opts: ["Gió", "thổi", "mạnh"] },
+  { q: "Tìm từ chỉ đặc điểm trong câu: 'Quả táo chín đỏ.'", text: "", ans: "đỏ", opts: ["Quả táo", "chín", "đỏ"] },
+  { q: "Điền vào chỗ trống: '... em là học sinh lớp 2.'", text: "", ans: "Em", opts: ["Em", "Mẹ", "Bố"] },
+  { q: "Từ nào là từ chỉ người thân?", text: "", ans: "Dì", opts: ["Dì", "Bạn", "Thầy"] },
+  { q: "Câu nào là câu kể?", text: "", ans: "Hôm nay trời rất đẹp.", opts: ["Hôm nay trời rất đẹp.", "Trời hôm nay thế nào?", "Đẹp quá!"] },
+  { q: "Từ nào đồng nghĩa với 'Mau chóng'?", text: "", ans: "Nhanh nhẹn", opts: ["Nhanh nhẹn", "Chậm chạp", "Lười biếng"] },
 ];
 
 const ENGLISH_DATA = [
@@ -84,7 +162,38 @@ const ENGLISH_DATA = [
   { q: "'Apple' là quả gì?", text: "", ans: "Quả táo", opts: ["Quả táo", "Quả cam", "Quả chuối"] },
   { q: "Màu 'Blue' là màu gì?", text: "", ans: "Màu xanh dương", opts: ["Màu xanh lá", "Màu xanh dương", "Màu tím"] },
   { q: "'Hello' nghĩa là gì?", text: "", ans: "Xin chào", opts: ["Xin chào", "Tạm biệt", "Cảm ơn"] },
-  { q: "'Elephant' là con gì?", text: "", ans: "Con voi", opts: ["Con voi", "Con hổ", "Con hươu"] }
+  { q: "'Elephant' là con gì?", text: "", ans: "Con voi", opts: ["Con voi", "Con hổ", "Con hươu"] },
+  { q: "Màu 'Green' là màu gì?", text: "", ans: "Màu xanh lá", opts: ["Màu đỏ", "Màu xanh lá", "Màu đen"] },
+  { q: "'Con chó' tiếng Anh là gì?", text: "", ans: "Dog", opts: ["Dog", "Cat", "Bird"] },
+  { q: "Số 'Ten' là số mấy?", text: "", ans: "10", opts: ["1", "10", "100"] },
+  { q: "'Banana' là quả gì?", text: "", ans: "Quả chuối", opts: ["Quả táo", "Quả chuối", "Quả nho"] },
+  { q: "'Thank you' nghĩa là gì?", text: "", ans: "Cảm ơn", opts: ["Xin lỗi", "Cảm ơn", "Tạm biệt"] },
+  { q: "'Father' nghĩa là gì?", text: "", ans: "Bố", opts: ["Mẹ", "Bố", "Anh trai"] },
+  { q: "'Mother' nghĩa là gì?", text: "", ans: "Mẹ", opts: ["Mẹ", "Bố", "Chị gái"] },
+  { q: "'Lion' là con gì?", text: "", ans: "Con sư tử", opts: ["Con sư tử", "Con hổ", "Con báo"] },
+  { q: "'Sun' nghĩa là gì?", text: "", ans: "Mặt trời", opts: ["Mặt trăng", "Mặt trời", "Ngôi sao"] },
+  { q: "'Water' nghĩa là gì?", text: "", ans: "Nước", opts: ["Nước", "Sữa", "Bánh"] },
+  { q: "'Book' nghĩa là gì?", text: "", ans: "Quyển sách", opts: ["Cái bút", "Quyển sách", "Cái thước"] },
+  { q: "'Pencil' nghĩa là gì?", text: "", ans: "Bút chì", opts: ["Bút chì", "Bút mực", "Cục tẩy"] },
+  { q: "Màu 'Yellow' là màu gì?", text: "", ans: "Màu vàng", opts: ["Màu trắng", "Màu đen", "Màu vàng"] },
+  { q: "Số 'Seven' là số mấy?", text: "", ans: "7", opts: ["6", "7", "8"] },
+  { q: "'Bird' là con gì?", text: "", ans: "Con chim", opts: ["Con cá", "Con chim", "Con thỏ"] },
+  { q: "'Orange' là quả gì?", text: "", ans: "Quả cam", opts: ["Quả cam", "Quả táo", "Quả lê"] },
+  { q: "'Milk' nghĩa là gì?", text: "", ans: "Sữa", opts: ["Sữa", "Nước", "Trà"] },
+  { q: "'Brother' nghĩa là gì?", text: "", ans: "Anh/Em trai", opts: ["Anh/Em trai", "Chị/Em gái", "Bố"] },
+  { q: "'Sister' nghĩa là gì?", text: "", ans: "Chị/Em gái", opts: ["Anh/Em trai", "Chị/Em gái", "Mẹ"] },
+  { q: "'Head' là bộ phận nào?", text: "", ans: "Cái đầu", opts: ["Cái đầu", "Cái tay", "Cái chân"] },
+  { q: "'Hand' là bộ phận nào?", text: "", ans: "Bàn tay", opts: ["Bàn tay", "Bàn chân", "Cái tai"] },
+  { q: "'Butterfly' là con gì?", text: "", ans: "Con bướm", opts: ["Con bướm", "Con ong", "Con sâu"] },
+  { q: "Số 'Twelve' là số mấy?", text: "", ans: "12", opts: ["11", "12", "20"] },
+  { q: "Màu 'Pink' là màu gì?", text: "", ans: "Màu hồng", opts: ["Màu hồng", "Màu đỏ", "Màu tím"] },
+  { q: "'Chair' nghĩa là gì?", text: "", ans: "Cái ghế", opts: ["Cái bàn", "Cái ghế", "Cái tủ"] },
+  { q: "'Table' nghĩa là gì?", text: "", ans: "Cái bàn", opts: ["Cái bàn", "Cái ghế", "Cái cửa"] },
+  { q: "'Black' là màu gì?", text: "", ans: "Màu đen", opts: ["Màu đen", "Màu trắng", "Màu xám"] },
+  { q: "'White' là màu gì?", text: "", ans: "Màu trắng", opts: ["Màu đen", "Màu trắng", "Màu nâu"] },
+  { q: "'Duck' là con gì?", text: "", ans: "Con vịt", opts: ["Con vịt", "Con gà", "Con ngỗng"] },
+  { q: "'Fish' là con gì?", text: "", ans: "Con cá", opts: ["Con cá", "Con cua", "Con tôm"] },
+  { q: "'Rice' nghĩa là gì?", text: "", ans: "Cơm/Gạo", opts: ["Cơm/Gạo", "Bánh mì", "Phở"] },
 ];
 
 export default function App() {
@@ -142,17 +251,29 @@ export default function App() {
     // We don't throw here to avoid crashing the UI, but we log it for debugging
   };
 
+  const handleLogin = async () => {
+    const provider = new GoogleAuthProvider();
+    try {
+      await signInWithPopup(auth, provider);
+    } catch (err) {
+      console.error("Login error:", err);
+    }
+  };
+
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (u) => {
       if (u) {
         setUser(u);
         setIsAuthReady(true);
+        if (u.displayName && !playerName) {
+          setPlayerName(u.displayName);
+        }
       } else {
-        signInAnonymously(auth).catch(err => console.error("Auth error:", err));
+        setIsAuthReady(false);
       }
     });
     return () => unsubscribe();
-  }, []);
+  }, [playerName]);
 
   // Test Firestore connection
   useEffect(() => {
@@ -211,16 +332,32 @@ export default function App() {
     
     if (subject === 'math') {
       if (grade === '2') {
-        const mathTypes = ['calc', 'compare', 'unit', 'word', 'estimate', 'digits', 'unit_choice', 'multi_step'];
+        const mathTypes = ['calc', 'compare', 'unit', 'word', 'estimate', 'digits', 'unit_choice', 'multi_step', 'logic', 'ordering'];
         const mathType = mathTypes[Math.floor(Math.random() * mathTypes.length)];
         
         if (mathType === 'calc') {
           const ops: Operator[] = ['+', '-', 'x', ':'];
-          const operator = ops[Math.floor(Math.random() * ops.length)];
+          let operator = ops[Math.floor(Math.random() * ops.length)];
           let n1: number = 0, n2: number = 0, ans: number = 0;
 
-          if (operator === '+' || operator === '-') {
-            const is3Digit = Math.random() < 0.7; // Even more 3-digit questions
+          // Specific requested calculations or similar
+          const useRequested = Math.random() < 0.3;
+          if (useRequested) {
+            const reqs = [
+              { n1: 75, n2: 17, op: '+' as Operator },
+              { n1: 8, n2: 65, op: '+' as Operator },
+              { n1: 91, n2: 52, op: '-' as Operator },
+              { n1: 83, n2: 36, op: '-' as Operator },
+              { n1: 48, n2: 25, op: '+' as Operator },
+              { n1: 62, n2: 38, op: '-' as Operator },
+              { n1: 100, n2: 45, op: '-' as Operator },
+              { n1: 27, n2: 54, op: '+' as Operator }
+            ];
+            const r = reqs[Math.floor(Math.random() * reqs.length)];
+            n1 = r.n1; n2 = r.n2; operator = r.op;
+            ans = operator === '+' ? n1 + n2 : n1 - n2;
+          } else if (operator === '+' || operator === '-') {
+            const is3Digit = Math.random() < 0.5;
             const max = is3Digit ? 999 : 100;
             if (operator === '+') {
               n1 = Math.floor(Math.random() * (max - 10)) + 1;
@@ -240,30 +377,97 @@ export default function App() {
               ans = multiplier; n1 = table * multiplier; n2 = table;
             }
           }
-          newQ = { type: 'math', num1: n1, num2: n2, operator, answer: ans };
+          newQ = { type: 'math', num1: n1, num2: n2, operator, answer: ans, q: "Đặt tính rồi tính:" };
         } else if (mathType === 'multi_step') {
-          const type = Math.floor(Math.random() * 3);
+          const type = Math.floor(Math.random() * 5);
           let q = "", ans = 0;
           if (type === 0) { // a * b + c
-            const a = [2,3,4,5,6,7,8,9][Math.floor(Math.random()*8)];
+            const a = [2,3,4,5][Math.floor(Math.random()*4)];
             const b = Math.floor(Math.random()*9)+1;
-            const c = Math.floor(Math.random()*500)+100;
+            const c = Math.floor(Math.random()*50)+10;
             ans = a * b + c;
             q = `${a} x ${b} + ${c} = ?`;
-          } else if (type === 1) { // a - b + c
-            const a = Math.floor(Math.random()*500)+100;
-            const b = Math.floor(Math.random()*a)+1;
-            const c = Math.floor(Math.random()*500)+100;
+          } else if (type === 1) { // a km * b / c
+            const a = [2,3,4,5][Math.floor(Math.random()*4)];
+            const b = [5, 10][Math.floor(Math.random()*2)];
+            const c = 5;
+            ans = (a * b) / c;
+            q = `${a}km x ${b} : ${c} = ? km`;
+          } else if (type === 2) { // a dm / b + c dm
+            const a = [12, 14, 16, 18, 20][Math.floor(Math.random()*5)];
+            const b = 2;
+            const c = Math.floor(Math.random()*50)+10;
+            ans = (a / b) + c;
+            q = `${a}dm : ${b} + ${c}dm = ? dm`;
+          } else if (type === 3) { // a x b : c
+            const a = [2, 3, 4, 5][Math.floor(Math.random()*4)];
+            const b = [4, 6, 8, 10][Math.floor(Math.random()*4)];
+            const c = 2;
+            ans = (a * b) / c;
+            q = `${a} x ${b} : ${c} = ?`;
+          } else {
+            const a = Math.floor(Math.random()*50)+50;
+            const b = Math.floor(Math.random()*30)+10;
+            const c = Math.floor(Math.random()*20)+5;
             ans = a - b + c;
             q = `${a} - ${b} + ${c} = ?`;
-          } else { // a + b - c
-            const a = Math.floor(Math.random()*500)+100;
-            const b = Math.floor(Math.random()*400)+100;
-            const c = Math.floor(Math.random()*(a+b-10))+1;
-            ans = a + b - c;
-            q = `${a} + ${b} - ${c} = ?`;
           }
           newQ = { type: 'text', q, ans };
+        } else if (mathType === 'logic') {
+          const type = Math.floor(Math.random() * 3);
+          if (type === 0) {
+            // Largest/Smallest number from digits
+            const digits = [1, 4, 6, 2, 5, 8, 3, 7].sort(() => Math.random() - 0.5).slice(0, 3);
+            const sorted = [...digits].sort((a, b) => b - a);
+            const isEven = Math.random() < 0.5;
+            const ans = sorted.join('');
+            newQ = {
+              type: 'text',
+              q: `Từ 3 chữ số {${digits.join(', ')}}, viết số lớn nhất có 3 chữ số khác nhau?`,
+              ans: ans,
+              opts: [ans, sorted.reverse().join(''), sorted[0].toString() + sorted[2] + sorted[1], "999"]
+            };
+          } else if (type === 1) {
+            // Forming numbers with condition
+            const digits = [2, 4, 5, 8];
+            const limit = 425;
+            // Manual calculation for this specific set: 245, 248, 254, 258, 284, 285, 425 (no, <425), 428 (no)
+            // Numbers starting with 2: 245, 248, 254, 258, 284, 285 (6 numbers)
+            // Numbers starting with 4: 425 (no), 428 (no), 452 (no), 458 (no), 482 (no), 485 (no)
+            // Total: 6
+            newQ = {
+              type: 'text',
+              q: `Cho các số {2, 4, 5, 8}. Lập được bao nhiêu số có 3 chữ số khác nhau bé hơn 425?`,
+              ans: 6,
+              opts: [4, 6, 8, 12]
+            };
+          } else {
+            const digits = [1, 6, 4];
+            // Largest even number
+            // 641 (no), 614 (yes), 461 (no), 416 (yes), 164 (yes), 146 (yes)
+            // Largest is 614
+            newQ = {
+              type: 'text',
+              q: `Từ 3 chữ số {1, 6, 4}, viết số chẵn lớn nhất có 3 chữ số khác nhau?`,
+              ans: 614,
+              opts: [641, 614, 461, 416]
+            };
+          }
+        } else if (mathType === 'ordering') {
+          const nums = Array.from({length: 4}, () => Math.floor(Math.random() * 900) + 100);
+          const isDesc = Math.random() < 0.5;
+          const sorted = [...nums].sort((a, b) => isDesc ? b - a : a - b);
+          newQ = {
+            type: 'text',
+            q: `Sắp xếp các số {${nums.join(', ')}} theo thứ tự từ ${isDesc ? 'lớn đến bé' : 'bé đến lớn'}:`,
+            ans: sorted.join(', '),
+            opts: [
+              sorted.join(', '),
+              [...sorted].reverse().join(', '),
+              nums.sort().join(', '),
+              nums.join(', ')
+            ]
+          };
         } else if (mathType === 'digits') {
           // Logic: How many 3-digit numbers can be formed
           const digits = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9].sort(() => Math.random() - 0.5).slice(0, 4);
@@ -282,51 +486,82 @@ export default function App() {
           };
         } else if (mathType === 'unit_choice') {
           const scenarios = [
-            { q: "Độ dài bút chì là 12 ...", ans: "cm" },
-            { q: "Độ dài cái bàn là 8 ...", ans: "dm" },
-            { q: "Chiều cao bạn Nam là 115 ...", ans: "cm" },
-            { q: "Quãng đường từ nhà An đến trường là 3 ...", ans: "km" },
-            { q: "Bàn học cao 50 ...", ans: "cm" },
-            { q: "Quãng đường từ Hà Nội đến Hải Phòng là 120 ...", ans: "km" },
-            { q: "Quyển sách Toán dày khoảng 1 ...", ans: "cm" },
-            { q: "Cột cờ trường em cao 10 ...", ans: "m" },
-            { q: "Độ dài sải tay của em khoảng 1 ...", ans: "m" }
+            { q: "Độ dài bút chì là 12 ...", ans: "cm", opts: ['cm', 'm', 'dm', 'km'] },
+            { q: "Độ dài cái bàn là 8 ...", ans: "dm", opts: ['cm', 'm', 'dm', 'km'] },
+            { q: "Chiều cao bạn Nam là 115 ...", ans: "cm", opts: ['cm', 'm', 'dm', 'km'] },
+            { q: "Quãng đường từ nhà An đến trường là 3 ...", ans: "km", opts: ['cm', 'm', 'dm', 'km'] },
+            { q: "Bàn học cao 50 ...", ans: "cm", opts: ['cm', 'm', 'dm', 'km'] },
+            { q: "Quãng đường từ Hà Nội đến Hải Phòng là 120 ...", ans: "km", opts: ['cm', 'm', 'dm', 'km'] },
+            { q: "Con gà nặng khoảng 2 ...", ans: "kg", opts: ['kg', 'g', 'l', 'km'] },
+            { q: "Bao gạo nặng 50 ...", ans: "kg", opts: ['kg', 'g', 'l', 'm'] },
+            { q: "Một ngày có 24 ...", ans: "giờ", opts: ['giờ', 'phút', 'giây', 'ngày'] },
+            { q: "Một giờ có 60 ...", ans: "phút", opts: ['giờ', 'phút', 'giây', 'ngày'] },
+            { q: "Mỗi tiết học kéo dài 35 ...", ans: "phút", opts: ['giờ', 'phút', 'giây', 'ngày'] },
+            { q: "Một tuần có 7 ...", ans: "ngày", opts: ['giờ', 'phút', 'ngày', 'tháng'] }
           ];
           const sc = scenarios[Math.floor(Math.random() * scenarios.length)];
           newQ = {
             type: 'text',
             q: sc.q,
             ans: sc.ans,
-            opts: ['cm', 'm', 'dm', 'km']
+            opts: sc.opts
           };
         } else if (mathType === 'compare') {
-          const is3Digit = Math.random() < 0.4;
-          const max = is3Digit ? 999 : 100;
-          const v1 = Math.floor(Math.random() * max);
-          const v2 = Math.floor(Math.random() * max);
-          const ans = v1 > v2 ? '>' : (v1 < v2 ? '<' : '=');
-          newQ = { type: 'math', num1: v1, num2: v2, operator: '?', answer: ans, opts: ['>', '<', '='] };
+          const type = Math.floor(Math.random() * 3);
+          if (type === 0) {
+            // Standard number comparison
+            const is3Digit = Math.random() < 0.4;
+            const max = is3Digit ? 999 : 100;
+            const v1 = Math.floor(Math.random() * max);
+            const v2 = Math.floor(Math.random() * max);
+            const ans = v1 > v2 ? '>' : (v1 < v2 ? '<' : '=');
+            newQ = { type: 'math', num1: v1, num2: v2, operator: '?', answer: ans, opts: ['>', '<', '='] };
+          } else if (type === 1) {
+            // Measurement comparison (Length)
+            const scenarios = [
+              { v1: "1 m", v2: "90 cm", ans: ">" },
+              { v1: "10 dm", v2: "1 m", ans: "=" },
+              { v1: "20 cm", v2: "3 dm", ans: "<" },
+              { v1: "5 km", v2: "500 m", ans: ">" },
+              { v1: "100 cm", v2: "10 dm", ans: "=" }
+            ];
+            const sc = scenarios[Math.floor(Math.random() * scenarios.length)];
+            newQ = { type: 'text', q: `So sánh: ${sc.v1} ... ${sc.v2}`, ans: sc.ans, opts: ['>', '<', '='] };
+          } else {
+            // Measurement comparison (Time/Mass)
+            const scenarios = [
+              { v1: "1 giờ", v2: "50 phút", ans: ">" },
+              { v1: "60 phút", v2: "1 giờ", ans: "=" },
+              { v1: "1 ngày", v2: "20 giờ", ans: ">" },
+              { v1: "1 tuần", v2: "10 ngày", ans: "<" },
+              { v1: "2 kg", v2: "2000 g", ans: "=" }
+            ];
+            const sc = scenarios[Math.floor(Math.random() * scenarios.length)];
+            newQ = { type: 'text', q: `So sánh: ${sc.v1} ... ${sc.v2}`, ans: sc.ans, opts: ['>', '<', '='] };
+          }
         } else if (mathType === 'unit') {
           const units = [
             { from: 'km', to: 'm', factor: 1000 },
             { from: 'm', to: 'cm', factor: 100 },
             { from: 'm', to: 'dm', factor: 10 },
-            { from: 'dm', to: 'cm', factor: 10 }
+            { from: 'dm', to: 'cm', factor: 10 },
+            { from: 'giờ', to: 'phút', factor: 60 },
+            { from: 'ngày', to: 'giờ', factor: 24 },
+            { from: 'tuần', to: 'ngày', factor: 7 },
+            { from: 'kg', to: 'g', factor: 1000 }
           ];
           const unit = units[Math.floor(Math.random() * units.length)];
-          const val = Math.floor(Math.random() * 9) + 1;
+          const val = unit.from === 'kg' || unit.from === 'km' ? Math.floor(Math.random() * 5) + 1 : Math.floor(Math.random() * 9) + 1;
           const correctAns = val * unit.factor;
           
-          // Generate challenging options (powers of 10 or common mistakes)
           const opts = [correctAns];
-          const possibleMistakes = [val * 10, val * 100, val * 1000, val * 10000].filter(v => v !== correctAns);
+          const possibleMistakes = [val * 10, val * 100, val * 1000, val * 60, val * 24].filter(v => v !== correctAns && v > 0);
           while (opts.length < 4 && possibleMistakes.length > 0) {
             const m = possibleMistakes.shift();
             if (m && !opts.includes(m)) opts.push(m);
           }
-          // Fill remaining if any
           while (opts.length < 4) {
-            const wrong = correctAns + (Math.random() < 0.5 ? 100 : -50);
+            const wrong = correctAns + (Math.random() < 0.5 ? 10 : -5);
             if (wrong > 0 && !opts.includes(wrong)) opts.push(wrong);
           }
 
@@ -334,7 +569,7 @@ export default function App() {
             type: 'text', 
             q: `Đổi đơn vị: ${val} ${unit.from} = ... ${unit.to}?`, 
             ans: correctAns,
-            opts: opts
+            opts: opts.sort(() => Math.random() - 0.5)
           };
         } else if (mathType === 'word') {
           const scenarios = [
@@ -342,13 +577,43 @@ export default function App() {
             { template: "Mẹ mua {n1}l dầu, dùng hết {n2}l. Còn lại bao nhiêu lít?", op: '-' },
             { template: "Mỗi túi có {n1} quả cam. 5 túi có bao nhiêu quả?", op: 'x', n2: 5 },
             { template: "Một nhà máy sáng nay sản xuất được {n1} chiếc bánh mì tròn và {n2} chiếc bánh mì dẹt. Hỏi sáng nay nhà máy sản xuất được tất cả bao nhiêu chiếc bánh mì?", op: '+' },
-            { template: "Một cửa hàng bán đồ thể thao đã nhập về {n1} quả bóng đá, số quả bóng rổ cửa hàng nhập về nhiều hơn số quả bóng đá {n2} quả. Hỏi cửa hàng đã nhập về bao nhiêu quả bóng rổ?", op: '+' }
+            { template: "Một cửa hàng bán đồ thể thao đã nhập về {n1} quả bóng đá, số quả bóng rổ cửa hàng nhập về nhiều hơn số quả bóng đá {n2} quả. Hỏi cửa hàng đã nhập về bao nhiêu quả bóng rổ?", op: '+' },
+            { template: "Khối 2 có 1 đội nam và 1 đội nữ tham gia thi nhảy dây, mỗi đội có {n1} bạn. Hỏi tất cả có bao nhiêu bạn?", op: 'x', n2: 2 },
+            { template: "An mua {n1} bông hoa và cắm mỗi lọ {n2} bông. Hỏi An đã cắm được bao nhiêu lọ hoa?", op: ':' },
+            { template: "Có {n1} cái kẹo chia đều cho {n2} bạn. Mỗi bạn được mấy cái?", op: ':' },
+            { template: "Mỗi con thỏ có 2 cái tai. {n1} con thỏ có bao nhiêu cái tai?", op: 'x', n2: 2 },
+            { template: "Mỗi bàn có 4 chân. {n1} cái bàn có bao nhiêu chân?", op: 'x', n2: 4 },
+            { template: "Có {n1} học sinh xếp thành các hàng, mỗi hàng {n2} bạn. Hỏi có bao nhiêu hàng?", op: ':' },
+            { template: "Một sợi dây dài {n1}cm, cắt đi {n2}cm. Còn lại bao nhiêu cm?", op: '-' },
+            { template: "Lớp 2A có {n1} bạn, lớp 2B có {n2} bạn. Cả hai lớp có bao nhiêu bạn?", op: '+' },
+            { template: "Trong vườn có {n1} cây cam và {n2} cây chanh. Hỏi có tất cả bao nhiêu cây?", op: '+' },
+            { template: "Một cửa hàng có {n1} quả trứng, đã bán {n2} quả. Còn lại bao nhiêu quả?", op: '-' },
+            { template: "Mỗi lọ hoa cắm được {n1} bông hoa. 3 lọ như thế cắm được bao nhiêu bông?", op: 'x', n2: 3 },
+            { template: "Có {n1} quyển vở chia đều cho {n2} nhóm. Mỗi nhóm được bao nhiêu quyển?", op: ':' }
           ];
           const sc = scenarios[Math.floor(Math.random() * scenarios.length)];
-          const isLarge = Math.random() < 0.5;
-          const n1 = isLarge ? Math.floor(Math.random() * 500) + 100 : Math.floor(Math.random() * 50) + 10;
-          const n2 = sc.n2 || (isLarge ? Math.floor(Math.random() * 400) + 50 : Math.floor(Math.random() * n1) + 1);
-          const ans = sc.op === '+' ? n1 + n2 : (sc.op === '-' ? n1 - n2 : n1 * n2);
+          let n1 = 0, n2 = 0, ans = 0;
+          
+          if (sc.op === '+') {
+            n1 = Math.floor(Math.random() * 50) + 10;
+            n2 = Math.floor(Math.random() * 40) + 5;
+            ans = n1 + n2;
+          } else if (sc.op === '-') {
+            n1 = Math.floor(Math.random() * 90) + 10;
+            n2 = Math.floor(Math.random() * (n1 - 5)) + 1;
+            ans = n1 - n2;
+          } else if (sc.op === 'x') {
+            n1 = (sc as any).n1 || Math.floor(Math.random() * 8) + 2;
+            n2 = (sc as any).n2 || Math.floor(Math.random() * 5) + 2;
+            ans = n1 * n2;
+          } else {
+            ans = Math.floor(Math.random() * 8) + 2;
+            n2 = (sc as any).n2 || [2, 3, 4, 5][Math.floor(Math.random() * 4)];
+            n1 = ans * n2;
+            // Special case for user request: 15 / 5
+            if (Math.random() < 0.1) { n1 = 15; n2 = 5; ans = 3; }
+          }
+
           newQ = { 
             type: 'text', 
             q: sc.template.replace('{n1}', n1.toString()).replace('{n2}', n2.toString()), 
@@ -798,11 +1063,17 @@ export default function App() {
               ))}
             </div>
             <button
-              onClick={() => setGameState('subject_select')}
+              onClick={() => {
+                if (!user) {
+                  handleLogin();
+                } else {
+                  setGameState('subject_select');
+                }
+              }}
               disabled={!playerName.trim()}
-              className="w-full bg-green-500 hover:bg-green-600 disabled:bg-gray-200 text-white text-2xl font-bold py-4 rounded-full shadow-lg transition-all active:scale-95"
+              className="w-full bg-green-500 hover:bg-green-600 disabled:bg-gray-200 text-white text-2xl font-bold py-4 rounded-full shadow-lg transition-all active:scale-95 flex items-center justify-center gap-2"
             >
-              Tiếp tục
+              {!user ? "Đăng nhập với Google" : "Tiếp tục"}
             </button>
           </motion.div>
         )}
