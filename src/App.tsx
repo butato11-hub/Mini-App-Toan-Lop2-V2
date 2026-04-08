@@ -366,7 +366,7 @@ export default function App() {
     
     if (subject === 'math') {
       if (grade === '2') {
-        const mathTypes = ['calc', 'compare', 'unit', 'word', 'estimate', 'digits', 'unit_choice', 'multi_step', 'logic', 'ordering'];
+        const mathTypes = ['calc', 'compare', 'unit', 'word', 'estimate', 'digits', 'unit_choice', 'multi_step', 'logic', 'ordering', 'special_numbers', 'find_x', 'geometry'];
         const mathType = mathTypes[Math.floor(Math.random() * mathTypes.length)];
         
         if (mathType === 'calc') {
@@ -382,8 +382,11 @@ export default function App() {
               { n1: 8, n2: 65, op: '+' as Operator },
               { n1: 91, n2: 52, op: '-' as Operator },
               { n1: 83, n2: 36, op: '-' as Operator },
-              { n1: 48, n2: 25, op: '+' as Operator },
-              { n1: 62, n2: 38, op: '-' as Operator },
+              { n1: 423, n2: 268, op: '+' as Operator },
+              { n1: 365, n2: 284, op: '+' as Operator },
+              { n1: 879, n2: 264, op: '-' as Operator },
+              { n1: 787, n2: 467, op: '-' as Operator },
+              { n1: 512, n2: 147, op: '+' as Operator },
               { n1: 100, n2: 45, op: '-' as Operator },
               { n1: 27, n2: 54, op: '+' as Operator }
             ];
@@ -391,15 +394,15 @@ export default function App() {
             n1 = r.n1; n2 = r.n2; operator = r.op;
             ans = operator === '+' ? n1 + n2 : n1 - n2;
           } else if (operator === '+' || operator === '-') {
-            const is3Digit = Math.random() < 0.5;
+            const is3Digit = Math.random() < 0.7; // Increased 3-digit frequency
             const max = is3Digit ? 999 : 100;
             if (operator === '+') {
-              n1 = Math.floor(Math.random() * (max - 10)) + 1;
-              n2 = Math.floor(Math.random() * (max - n1)) + 1;
+              n1 = Math.floor(Math.random() * (max - 100)) + 10;
+              n2 = Math.floor(Math.random() * (max - n1)) + 10;
               ans = n1 + n2;
             } else {
-              n1 = Math.floor(Math.random() * (max - 2)) + 2;
-              n2 = Math.floor(Math.random() * n1) + 1;
+              n1 = Math.floor(Math.random() * (max - 100)) + 100;
+              n2 = Math.floor(Math.random() * (n1 - 10)) + 1;
               ans = n1 - n2;
             }
           } else {
@@ -526,6 +529,13 @@ export default function App() {
             { q: "Quãng đường từ nhà An đến trường là 3 ...", ans: "km", opts: ['cm', 'm', 'dm', 'km'] },
             { q: "Bàn học cao 50 ...", ans: "cm", opts: ['cm', 'm', 'dm', 'km'] },
             { q: "Quãng đường từ Hà Nội đến Hải Phòng là 120 ...", ans: "km", opts: ['cm', 'm', 'dm', 'km'] },
+            { q: "Một bước chân của em dài khoảng 4 ...", ans: "dm", opts: ['cm', 'm', 'dm', 'km'] },
+            { q: "Cửa lớp học cao 2 ...", ans: "m", opts: ['cm', 'm', 'dm', 'km'] },
+            { q: "Bạn Ngọc cao 130 ...", ans: "cm", opts: ['cm', 'm', 'dm', 'km'] },
+            { q: "Chiều rộng cổng trường khoảng 5 ...", ans: "m", opts: ['cm', 'm', 'dm', 'km'] },
+            { q: "Quyển vở dài khoảng 2 ...", ans: "dm", opts: ['cm', 'm', 'dm', 'km'] },
+            { q: "Cái bút chì dài khoảng 15 ...", ans: "cm", opts: ['cm', 'm', 'dm', 'km'] },
+            { q: "Con kiến dài khoảng 5 ...", ans: "mm", opts: ['cm', 'mm', 'dm', 'm'] },
             { q: "Con gà nặng khoảng 2 ...", ans: "kg", opts: ['kg', 'g', 'l', 'km'] },
             { q: "Bao gạo nặng 50 ...", ans: "kg", opts: ['kg', 'g', 'l', 'm'] },
             { q: "Một ngày có 24 ...", ans: "giờ", opts: ['giờ', 'phút', 'giây', 'ngày'] },
@@ -623,6 +633,12 @@ export default function App() {
             { template: "Trong vườn có {n1} cây cam và {n2} cây chanh. Hỏi có tất cả bao nhiêu cây?", op: '+' },
             { template: "Một cửa hàng có {n1} quả trứng, đã bán {n2} quả. Còn lại bao nhiêu quả?", op: '-' },
             { template: "Mỗi lọ hoa cắm được {n1} bông hoa. 3 lọ như thế cắm được bao nhiêu bông?", op: 'x', n2: 3 },
+            { template: "Vườn cam có {n1} cây. Vườn táo nhiều hơn vườn cam {n2} cây. Hỏi vườn táo có bao nhiêu cây?", op: '+' },
+            { template: "Đàn vịt có {n1} con, đàn gà ít hơn {n2} con. Hỏi đàn gà có bao nhiêu con?", op: '-' },
+            { template: "Cửa hàng có {n1} bao gạo, đã bán {n2} bao. Còn lại bao nhiêu bao?", op: '-' },
+            { template: "Một trường học có {n1} học sinh nam và {n2} học sinh nữ. Hỏi trường có tất cả bao nhiêu học sinh?", op: '+' },
+            { template: "Mẹ hái được {n1} quả táo, chị hái được ít hơn mẹ {n2} quả. Hỏi chị hái được bao nhiêu quả?", op: '-' },
+            { template: "Có {n1} cái bánh chia đều vào {n2} đĩa. Mỗi đĩa có mấy cái bánh?", op: ':' },
             { template: "Có {n1} quyển vở chia đều cho {n2} nhóm. Mỗi nhóm được bao nhiêu quyển?", op: ':' }
           ];
           const sc = scenarios[Math.floor(Math.random() * scenarios.length)];
@@ -653,6 +669,95 @@ export default function App() {
             q: sc.template.replace('{n1}', n1.toString()).replace('{n2}', n2.toString()), 
             ans: ans 
           };
+        } else if (mathType === 'special_numbers') {
+          const scenarios = [
+            { q: "Hiệu của số bé nhất có 3 chữ số với số lớn nhất có 2 chữ số là:", ans: 1 },
+            { q: "Tổng của số lớn nhất có 2 chữ số và số lớn nhất có 2 chữ số khác nhau là:", ans: 197 },
+            { q: "Tổng của số lớn nhất có 2 chữ số khác nhau và số bé nhất có 3 chữ số giống nhau là:", ans: 209 },
+            { q: "Tổng của số lớn nhất có 2 chữ số và số bé nhất có 3 chữ số khác nhau là:", ans: 201 },
+            { q: "Hiệu của số lớn nhất có 3 chữ số và số bé nhất có 3 chữ số là:", ans: 899 },
+            { q: "Số bé nhất có 3 chữ số khác nhau là:", ans: 102 },
+            { q: "Số lớn nhất có 3 chữ số khác nhau là:", ans: 987 },
+            { q: "Số bé nhất có 2 chữ số giống nhau là:", ans: 11 },
+            { q: "Số lớn nhất có 2 chữ số giống nhau là:", ans: 99 }
+          ];
+          const sc = scenarios[Math.floor(Math.random() * scenarios.length)];
+          newQ = { type: 'text', q: sc.q, ans: sc.ans, opts: [sc.ans, sc.ans + 1, sc.ans - 1, 100].filter((v, i, a) => a.indexOf(v) === i) };
+        } else if (mathType === 'find_x') {
+          const n1 = Math.floor(Math.random() * 400) + 100;
+          const n2 = Math.floor(Math.random() * 300) + 50;
+          const type = Math.floor(Math.random() * 2);
+          if (type === 0) { // x - n1 = n2
+            newQ = { type: 'text', q: `Tìm x biết: x - ${n1} = ${n2}`, ans: n1 + n2 };
+          } else { // x + n1 = n2 (ensure n2 > n1)
+            const n2_fixed = n1 + Math.floor(Math.random() * 200) + 10;
+            newQ = { type: 'text', q: `Tìm x biết: x + ${n1} = ${n2_fixed}`, ans: n2_fixed - n1 };
+          }
+        } else if (mathType === 'geometry') {
+          const scenarios = [
+            {
+              q: "Hình dưới đây có bao nhiêu hình tam giác?",
+              ans: 10,
+              opts: [8, 9, 10, 12],
+              svg: (
+                <svg viewBox="0 0 200 100" className="w-48 h-24 mx-auto mb-4">
+                  <path d="M10 90 L60 10 L60 90 Z" fill="none" stroke="currentColor" strokeWidth="2" />
+                  <rect x="60" y="10" width="100" height="80" fill="none" stroke="currentColor" strokeWidth="2" />
+                  <line x1="60" y1="10" x2="160" y2="90" stroke="currentColor" strokeWidth="2" />
+                  <line x1="160" y1="10" x2="60" y2="90" stroke="currentColor" strokeWidth="2" />
+                </svg>
+              )
+            },
+            {
+              q: "Hình dưới đây có bao nhiêu hình tứ giác?",
+              ans: 2,
+              opts: [1, 2, 3, 4],
+              svg: (
+                <svg viewBox="0 0 200 100" className="w-48 h-24 mx-auto mb-4">
+                  <path d="M10 90 L60 10 L60 90 Z" fill="none" stroke="currentColor" strokeWidth="2" />
+                  <rect x="60" y="10" width="100" height="80" fill="none" stroke="currentColor" strokeWidth="2" />
+                  <line x1="60" y1="10" x2="160" y2="90" stroke="currentColor" strokeWidth="2" />
+                  <line x1="160" y1="10" x2="60" y2="90" stroke="currentColor" strokeWidth="2" />
+                </svg>
+              )
+            },
+            {
+              q: "Hình dưới đây có bao nhiêu hình tam giác?",
+              ans: 3,
+              opts: [1, 2, 3, 4],
+              svg: (
+                <svg viewBox="0 0 100 100" className="w-24 h-24 mx-auto mb-4">
+                  <path d="M50 10 L10 90 L90 90 Z" fill="none" stroke="currentColor" strokeWidth="2" />
+                  <line x1="50" y1="10" x2="50" y2="90" stroke="currentColor" strokeWidth="2" />
+                </svg>
+              )
+            },
+            {
+              q: "Hình dưới đây có bao nhiêu hình tứ giác?",
+              ans: 3,
+              opts: [1, 2, 3, 4],
+              svg: (
+                <svg viewBox="0 0 100 100" className="w-24 h-24 mx-auto mb-4">
+                  <rect x="10" y="10" width="80" height="80" fill="none" stroke="currentColor" strokeWidth="2" />
+                  <line x1="10" y1="50" x2="90" y2="50" stroke="currentColor" strokeWidth="2" />
+                </svg>
+              )
+            },
+            {
+              q: "Hình dưới đây có bao nhiêu hình tam giác?",
+              ans: 8,
+              opts: [4, 6, 8, 10],
+              svg: (
+                <svg viewBox="0 0 100 100" className="w-24 h-24 mx-auto mb-4">
+                  <rect x="10" y="10" width="80" height="80" fill="none" stroke="currentColor" strokeWidth="2" />
+                  <line x1="10" y1="10" x2="90" y2="90" stroke="currentColor" strokeWidth="2" />
+                  <line x1="90" y1="10" x2="10" y2="90" stroke="currentColor" strokeWidth="2" />
+                </svg>
+              )
+            }
+          ];
+          const sc = scenarios[Math.floor(Math.random() * scenarios.length)];
+          newQ = { type: 'text', q: sc.q, text: sc.svg, ans: sc.ans, opts: sc.opts };
         } else { // estimate
           const val = Math.floor(Math.random() * 90) + 10;
           const ans = Math.round(val / 10) * 10;
