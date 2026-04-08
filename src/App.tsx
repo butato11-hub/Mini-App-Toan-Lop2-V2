@@ -8,7 +8,8 @@ import confetti from 'canvas-confetti';
 import { 
   Trophy, Timer, Star, RefreshCw, Play, CheckCircle2, XCircle, 
   Cat, Dog, Rabbit, Bird, Fish, Turtle, User, 
-  Book, Pen, Globe, Zap, ListChecks 
+  Book, Pen, Globe, Zap, ListChecks,
+  Calculator, Shapes, Ruler, MessageSquare, Search, LayoutGrid
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { auth, db } from './firebase';
@@ -59,6 +60,16 @@ const SUBJECTS = [
   { id: 'math', name: 'Toán Học', color: 'bg-orange-500', Icon: Book, desc: 'Cộng, trừ, nhân, chia...' },
   { id: 'vietnamese', name: 'Tiếng Việt', color: 'bg-blue-500', Icon: Pen, desc: 'Chính tả, từ vựng...' },
   { id: 'english', name: 'Tiếng Anh', color: 'bg-green-500', Icon: Globe, desc: 'Colors, Animals, Numbers...' }
+];
+
+const MATH_TOPICS_G2 = [
+  { id: 'calc_3_digit', name: 'Phép tính 3 chữ số', desc: 'Cộng, trừ <1000; nhân, chia', Icon: Calculator, color: 'text-orange-500' },
+  { id: 'geometry', name: 'Hình học', desc: 'Đếm hình tam giác, tứ giác', Icon: Shapes, color: 'text-blue-500' },
+  { id: 'special_numbers', name: 'Số học đặc biệt', desc: 'Số lớn nhất, số bé nhất', Icon: Star, color: 'text-yellow-500' },
+  { id: 'measurement', name: 'Đo lường', desc: 'm, dm, cm', Icon: Ruler, color: 'text-green-500' },
+  { id: 'word_problems', name: 'Giải toán có lời văn', desc: 'Bài toán đố vui', Icon: MessageSquare, color: 'text-purple-500' },
+  { id: 'find_x', name: 'Tìm X', desc: 'Tìm số chưa biết', Icon: Search, color: 'text-red-500' },
+  { id: 'all', name: 'Tất cả chủ đề', desc: 'Luyện tập tổng hợp', Icon: LayoutGrid, color: 'text-gray-500' }
 ];
 
 const VIETNAMESE_DATA = [
@@ -203,9 +214,10 @@ const ENGLISH_DATA = [
 ];
 
 export default function App() {
-  const [gameState, setGameState] = useState<'setup' | 'subject_select' | 'mode_select' | 'start' | 'playing' | 'result'>('setup');
+  const [gameState, setGameState] = useState<'setup' | 'subject_select' | 'topic_select' | 'mode_select' | 'start' | 'playing' | 'result'>('setup');
   const [subject, setSubject] = useState<SubjectId>('math');
   const [grade, setGrade] = useState<Grade>('2');
+  const [selectedTopic, setSelectedTopic] = useState<string | null>(null);
   const [gameMode, setGameMode] = useState<GameMode>('endless');
   const [playerName, setPlayerName] = useState('');
   const [selectedIconId, setSelectedIconId] = useState('cat');
@@ -366,8 +378,23 @@ export default function App() {
     
     if (subject === 'math') {
       if (grade === '2') {
-        const mathTypes = ['calc', 'compare', 'unit', 'word', 'estimate', 'digits', 'unit_choice', 'multi_step', 'logic', 'ordering', 'special_numbers', 'find_x', 'geometry'];
-        const mathType = mathTypes[Math.floor(Math.random() * mathTypes.length)];
+        let mathType: string;
+        
+        if (selectedTopic && selectedTopic !== 'all') {
+          if (selectedTopic === 'calc_3_digit') mathType = 'calc';
+          else if (selectedTopic === 'geometry') mathType = 'geometry';
+          else if (selectedTopic === 'special_numbers') mathType = 'special_numbers';
+          else if (selectedTopic === 'measurement') {
+            const mTypes = ['unit_choice', 'unit', 'compare'];
+            mathType = mTypes[Math.floor(Math.random() * mTypes.length)];
+          }
+          else if (selectedTopic === 'word_problems') mathType = 'word';
+          else if (selectedTopic === 'find_x') mathType = 'find_x';
+          else mathType = 'calc';
+        } else {
+          const mathTypes = ['calc', 'compare', 'unit', 'word', 'estimate', 'digits', 'unit_choice', 'multi_step', 'logic', 'ordering', 'special_numbers', 'find_x', 'geometry'];
+          mathType = mathTypes[Math.floor(Math.random() * mathTypes.length)];
+        }
         
         if (mathType === 'calc') {
           const ops: Operator[] = ['+', '-', 'x', ':'];
@@ -1244,7 +1271,14 @@ export default function App() {
               {SUBJECTS.map(s => (
                 <button
                   key={s.id}
-                  onClick={() => { setSubject(s.id as SubjectId); setGameState('mode_select'); }}
+                  onClick={() => { 
+                    setSubject(s.id as SubjectId); 
+                    if (s.id === 'math' && grade === '2') {
+                      setGameState('topic_select');
+                    } else {
+                      setGameState('mode_select');
+                    }
+                  }}
                   className="p-5 rounded-2xl border-4 border-gray-100 hover:border-blue-300 transition-all flex items-center gap-4 text-left group"
                 >
                   <div className={`${s.color} p-3 rounded-xl text-white group-hover:scale-110 transition-transform`}>
@@ -1258,6 +1292,35 @@ export default function App() {
               ))}
             </div>
             <button onClick={() => setGameState('setup')} className="mt-6 text-gray-400 font-bold hover:text-gray-600">Quay lại</button>
+          </motion.div>
+        )}
+
+        {gameState === 'topic_select' && (
+          <motion.div
+            key="topic_select"
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="text-center bg-white p-8 rounded-3xl shadow-xl border-4 border-orange-400 max-w-2xl w-full"
+          >
+            <h2 className="text-2xl font-bold text-orange-600 mb-6">Bé muốn luyện tập chủ đề nào?</h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {MATH_TOPICS_G2.map(t => (
+                <button
+                  key={t.id}
+                  onClick={() => { setSelectedTopic(t.id); setGameState('mode_select'); }}
+                  className="p-4 rounded-2xl border-4 border-gray-100 hover:border-orange-300 transition-all flex items-center gap-4 text-left group"
+                >
+                  <div className={`p-3 rounded-xl bg-orange-50 ${t.color} group-hover:scale-110 transition-transform`}>
+                    <t.Icon size={24} />
+                  </div>
+                  <div>
+                    <div className="font-bold text-lg text-gray-700">{t.name}</div>
+                    <div className="text-xs text-gray-400 leading-tight">{t.desc}</div>
+                  </div>
+                </button>
+              ))}
+            </div>
+            <button onClick={() => setGameState('subject_select')} className="mt-8 text-gray-400 font-bold hover:text-gray-600">Quay lại</button>
           </motion.div>
         )}
 
@@ -1291,7 +1354,18 @@ export default function App() {
                 </div>
               </button>
             </div>
-            <button onClick={() => setGameState('subject_select')} className="mt-8 text-gray-400 font-bold hover:text-gray-600">Quay lại</button>
+            <button 
+              onClick={() => {
+                if (subject === 'math' && grade === '2') {
+                  setGameState('topic_select');
+                } else {
+                  setGameState('subject_select');
+                }
+              }} 
+              className="mt-8 text-gray-400 font-bold hover:text-gray-600"
+            >
+              Quay lại
+            </button>
           </motion.div>
         )}
 
@@ -1449,6 +1523,14 @@ export default function App() {
               >
                 <RefreshCw /> Chơi lại
               </button>
+              {subject === 'math' && grade === '2' && (
+                <button 
+                  onClick={() => setGameState('topic_select')} 
+                  className="bg-blue-500 hover:bg-blue-600 text-white text-xl font-bold py-3 rounded-full shadow-md transition-all active:scale-95"
+                >
+                  Chọn chủ đề khác
+                </button>
+              )}
               <button onClick={() => setGameState('subject_select')} className="text-gray-400 font-bold hover:text-gray-600">Chọn môn khác</button>
             </div>
           </motion.div>
