@@ -98,6 +98,21 @@ const VIETNAMESE_DATA = [
   { q: "Câu 'Mẹ em là giáo viên' thuộc kiểu câu nào?", text: "", ans: "Ai là gì?", opts: ["Ai làm gì?", "Ai thế nào?", "Ai là gì?"] },
   { q: "Điền vào chỗ trống: 'i' hay 'y'?", text: "v...ết chữ", ans: "i", opts: ["i", "y"] },
   { q: "Từ trái nghĩa với 'Cao' là gì?", text: "", ans: "Thấp", opts: ["To", "Thấp", "Dài"] },
+  { q: "Điền vần 'ên' hay 'ênh'?", text: "b... nước", ans: "ên", opts: ["ên", "ênh"] },
+  { q: "Điền vần 'ên' hay 'ênh'?", text: "nhẹ t...", ans: "ênh", opts: ["ên", "ênh"] },
+  { q: "Điền vần 'ên' hay 'ênh'?", text: "mũi t...", ans: "ên", opts: ["ên", "ênh"] },
+  { q: "Điền vần 'ên' hay 'ênh'?", text: "l... xuống", ans: "ên", opts: ["ên", "ênh"] },
+  { q: "Điền vần 'ên' hay 'ênh'?", text: "b... vững", ans: "ên", opts: ["ên", "ênh"] },
+  { q: "Điền vần 'ên' hay 'ênh'?", text: "m... mông", ans: "ênh", opts: ["ên", "ênh"] },
+  { q: "Từ nào viết ĐÚNG chính tả?", text: "", ans: "máy bay", opts: ["máy bay", "mái bay"] },
+  { q: "Từ nào viết ĐÚNG chính tả?", text: "", ans: "máy tính", opts: ["máy tính", "mái tính"] },
+  { q: "Từ nào viết ĐÚNG chính tả?", text: "", ans: "báo chí", opts: ["báo chí", "bái chí"] },
+  { q: "Từ nào viết ĐÚNG chính tả?", text: "", ans: "bản đồ", opts: ["bản đồ", "bản đồ"] },
+  { q: "Từ nào viết ĐÚNG chính tả?", text: "", ans: "kính mắt", opts: ["kính mắt", "kính măt"] },
+  { q: "Từ nào viết ĐÚNG chính tả?", text: "", ans: "ti vi", opts: ["ti vi", "ty vy"] },
+  { q: "Điền vần 'iên' hay 'iêng'?", text: "c... trì", ans: "iên", opts: ["iên", "iêng"] },
+  { q: "Điền vần 'iên' hay 'iêng'?", text: "s... năng", ans: "iêng", opts: ["iên", "iêng"] },
+  { q: "Điền vần 'uân' hay 'uâng'?", text: "mùa x...", ans: "uân", opts: ["uân", "uâng"] },
   { q: "Điền vào chỗ trống: 'd' hay 'gi'?", text: "...ày dép", ans: "gi", opts: ["d", "gi"] },
   { q: "Từ nào viết đúng chính tả?", text: "", ans: "trường học", opts: ["trường học", "chường học"] },
   { q: "Con gì gáy 'O ó o'?", text: "", ans: "Con gà trống", opts: ["Con vịt", "Con gà trống", "Con mèo"] },
@@ -415,7 +430,13 @@ export default function App() {
               { n1: 787, n2: 467, op: '-' as Operator },
               { n1: 512, n2: 147, op: '+' as Operator },
               { n1: 100, n2: 45, op: '-' as Operator },
-              { n1: 27, n2: 54, op: '+' as Operator }
+              { n1: 27, n2: 54, op: '+' as Operator },
+              { n1: 267, n2: 125, op: '+' as Operator },
+              { n1: 247, n2: 136, op: '+' as Operator },
+              { n1: 802, n2: 59, op: '+' as Operator },
+              { n1: 183, n2: 9, op: '+' as Operator },
+              { n1: 345, n2: 156, op: '+' as Operator },
+              { n1: 703, n2: 88, op: '+' as Operator }
             ];
             const r = reqs[Math.floor(Math.random() * reqs.length)];
             n1 = r.n1; n2 = r.n2; operator = r.op;
@@ -469,12 +490,24 @@ export default function App() {
             const c = 2;
             ans = (a * b) / c;
             q = `${a} x ${b} : ${c} = ?`;
+          } else if (type === 4) {
+            ans = 30 + 70 + 831;
+            q = "30 + 70 + 831 = ?";
+          } else if (type === 5) {
+            ans = 4 * 5 + 165;
+            q = "4 x 5 + 165 = ?";
+          } else if (type === 6) {
+            const a = [10, 20, 30, 40, 50][Math.floor(Math.random()*5)];
+            const b = 100 - a;
+            const c = Math.floor(Math.random()*800)+100;
+            ans = a + b + c;
+            q = `${a} + ${b} + ${c} = ?`;
           } else {
-            const a = Math.floor(Math.random()*50)+50;
-            const b = Math.floor(Math.random()*30)+10;
-            const c = Math.floor(Math.random()*20)+5;
-            ans = a - b + c;
-            q = `${a} - ${b} + ${c} = ?`;
+            const a = [2, 3, 4, 5][Math.floor(Math.random()*4)];
+            const b = [4, 5, 6][Math.floor(Math.random()*3)];
+            const c = Math.floor(Math.random()*200)+100;
+            ans = a * b + c;
+            q = `${a} x ${b} + ${c} = ?`;
           }
           newQ = { type: 'text', q, ans };
         } else if (mathType === 'logic') {
@@ -666,7 +699,9 @@ export default function App() {
             { template: "Một trường học có {n1} học sinh nam và {n2} học sinh nữ. Hỏi trường có tất cả bao nhiêu học sinh?", op: '+' },
             { template: "Mẹ hái được {n1} quả táo, chị hái được ít hơn mẹ {n2} quả. Hỏi chị hái được bao nhiêu quả?", op: '-' },
             { template: "Có {n1} cái bánh chia đều vào {n2} đĩa. Mỗi đĩa có mấy cái bánh?", op: ':' },
-            { template: "Có {n1} quyển vở chia đều cho {n2} nhóm. Mỗi nhóm được bao nhiêu quyển?", op: ':' }
+            { template: "Có {n1} quyển vở chia đều cho {n2} nhóm. Mỗi nhóm được bao nhiêu quyển?", op: ':' },
+            { template: "Vườn nhà bạn Thỏ có {n1} cây cà rốt, vườn nhà bạn Sóc có nhiều hơn {n2} cây cà rốt. Hỏi vườn nhà cả 2 bạn có tất cả bao nhiêu cây cà rốt?", op: 'two_step_add' },
+            { template: "Nhà An có {n1} con gà, nhà Bình có nhiều hơn {n2} con gà. Hỏi cả hai nhà có tất cả bao nhiêu con gà?", op: 'two_step_add' }
           ];
           const sc = scenarios[Math.floor(Math.random() * scenarios.length)];
           let n1 = 0, n2 = 0, ans = 0;
@@ -683,6 +718,12 @@ export default function App() {
             n1 = (sc as any).n1 || Math.floor(Math.random() * 8) + 2;
             n2 = (sc as any).n2 || Math.floor(Math.random() * 5) + 2;
             ans = n1 * n2;
+          } else if (sc.op === 'two_step_add') {
+            n1 = Math.floor(Math.random() * 200) + 100;
+            n2 = Math.floor(Math.random() * 20) + 5;
+            // For the carrot problem specifically if it's the one
+            if (sc.template.includes("cà rốt")) { n1 = 255; n2 = 8; }
+            ans = n1 + (n1 + n2);
           } else {
             ans = Math.floor(Math.random() * 8) + 2;
             n2 = (sc as any).n2 || [2, 3, 4, 5][Math.floor(Math.random() * 4)];
